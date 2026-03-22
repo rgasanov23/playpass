@@ -108,17 +108,18 @@ model Training {
 }
 
 model Participation {
-  id           String               @id @default(cuid())
-  createdAt    DateTime             @default(now())
-  updatedAt    DateTime             @updatedAt
-  trainingId   String
-  userId       String
-  status       ParticipationStatus  @default(PENDING_PAYMENT)
-  paymentId    String?              @unique
-  joinedAt     DateTime?
-  cancelledAt  DateTime?
-  cancelReason String?
-  source       ParticipationSource  @default(LINK)
+  id             String               @id @default(cuid())
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  trainingId     String
+  userId         String
+  status         ParticipationStatus  @default(PENDING_PAYMENT)
+  paymentId      String?              @unique
+  joinedAt       DateTime?
+  cancelledAt    DateTime?
+  cancelReason   String?
+  holdExpiresAt  DateTime?
+  source         ParticipationSource  @default(LINK)
 
   training Training @relation(fields: [trainingId], references: [id], onDelete: Cascade)
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)

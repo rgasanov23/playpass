@@ -1,10 +1,17 @@
 import { Body, Controller, Get, Param, Patch } from '@nestjs/common';
-import { PaymentsService } from './payments.service';
 import { ConfirmPaymentDto } from './dto/confirm-payment.dto';
+import { PaymentsService } from './payments.service';
 
 @Controller('payments')
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
+
+  @Get('participation/:participationId')
+  async getByParticipationId(
+    @Param('participationId') participationId: string,
+  ) {
+    return this.paymentsService.getByParticipationId(participationId);
+  }
 
   @Get(':id')
   async getById(@Param('id') id: string) {

@@ -1,12 +1,14 @@
 import { Module } from '@nestjs/common';
+import { AuthModule } from '../auth/auth.module';
+import { PrismaModule } from '../prisma/prisma.module';
+import { ParticipationHoldExpiryService } from './participation-hold-expiry.service';
 import { ParticipationController } from './participation.controller';
 import { ParticipationService } from './participation.service';
-import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, AuthModule],
   controllers: [ParticipationController],
-  providers: [ParticipationService],
+  providers: [ParticipationService, ParticipationHoldExpiryService],
   exports: [ParticipationService],
 })
 export class ParticipationModule {}

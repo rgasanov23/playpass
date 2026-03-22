@@ -29,6 +29,26 @@ export class PaymentsService {
     return payment;
   }
 
+  async getByParticipationId(participationId: string) {
+    const payment = await this.prisma.payment.findFirst({
+      where: { participation: { id: participationId } },
+      include: {
+        participation: {
+          include: {
+            user: true,
+            training: true,
+          },
+        },
+      },
+    });
+
+    if (!payment) {
+      throw new NotFoundException('Платеж не найден');
+    }
+
+    return payment;
+  }
+
   async confirmPayment(paymentId: string, providerPaymentId?: string) {
     return this.prisma.$transaction(async (tx) => {
       const payment = await tx.payment.findUnique({
@@ -50,6 +70,22 @@ export class PaymentsService {
         throw new BadRequestException('Платеж не привязан к участию');
       }
 
+      const participation = payment.participation;
+
+      if (participation.status === 'EXPIRED') {
+        throw new BadRequestException(
+          'Нельзя подтвердить платёж для истёкшего участия',
+        );
+      }
+
+      const now = new Date();
+      if (
+        participation.holdExpiresAt &&
+        participation.holdExpiresAt < now
+      ) {
+        throw new BadRequestException('Время брони для оплаты истекло');
+      }
+
       if (payment.status === 'SUCCEEDED') {
         return payment;
       }
@@ -62,7 +98,7 @@ export class PaymentsService {
 
       const occupiedCount = await tx.participation.count({
         where: {
-          trainingId: payment.participation.trainingId,
+          trainingId: participation.trainingId,
           OR: [
             { status: 'CONFIRMED' },
             { status: 'PENDING_PAYMENT' },
@@ -70,7 +106,7 @@ export class PaymentsService {
         },
       });
 
-      if (occupiedCount > payment.participation.training.participantLimit) {
+      if (occupiedCount > participation.training.participantLimit) {
         throw new BadRequestException('Свободных мест нет');
       }
 
@@ -92,10 +128,11 @@ export class PaymentsService {
       });
 
       await tx.participation.update({
-        where: { id: payment.participation.id },
+        where: { id: participation.id },
         data: {
           status: 'CONFIRMED',
           joinedAt: new Date(),
+          holdExpiresAt: null,
         },
       });
 
