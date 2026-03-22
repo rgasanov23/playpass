@@ -1,0 +1,186 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  ORGANIZER
+  PLAYER
+}
+
+enum SportType {
+  VOLLEYBALL
+  FOOTBALL
+  BASKETBALL
+  TENNIS
+  PADEL
+  OTHER
+}
+
+enum TrainingStatus {
+  DRAFT
+  PUBLISHED
+  FULL
+  COMPLETED
+  CANCELLED
+}
+
+enum TrainingVisibility {
+  PRIVATE
+  PUBLIC
+}
+
+enum ParticipationStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  CANCELLED
+  EXPIRED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  CANCELED
+  REFUNDED
+}
+
+enum PaymentProvider {
+  YOOKASSA
+}
+
+enum ParticipationSource {
+  LINK
+  INVITE
+  PUBLIC_LISTING
+  MANUAL
+}
+
+model User {
+  id           String          @id @default(cuid())
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  fullName     String
+  phone        String?         @unique
+  email        String?         @unique
+  avatarUrl    String?
+  role         UserRole        @default(PLAYER)
+  isActive     Boolean         @default(true)
+
+  organizerTrainings Training[]      @relation("OrganizerTrainings")
+  participations     Participation[]
+  payments           Payment[]
+  organizerProfile   OrganizerProfile?
+  notifications      Notification[]
+  auditLogs          AuditLog[]
+}
+
+model Training {
+  id                            String              @id @default(cuid())
+  createdAt                     DateTime            @default(now())
+  updatedAt                     DateTime            @updatedAt
+  organizerId                   String
+  title                         String
+  description                   String?
+  sportType                     SportType           @default(OTHER)
+  placeName                     String
+  address                       String?
+  startsAt                      DateTime
+  endsAt                        DateTime?
+  participantLimit              Int
+  courtPriceTotal               Decimal             @db.Decimal(10, 2)
+  serviceFeePerParticipant      Decimal             @db.Decimal(10, 2)
+  acquiringPercent              Decimal             @db.Decimal(5, 2)
+  calculatedPricePerParticipant Decimal             @db.Decimal(10, 2)
+  status                        TrainingStatus      @default(DRAFT)
+  visibility                    TrainingVisibility  @default(PRIVATE)
+  joinToken                     String              @unique
+
+  organizer      User             @relation("OrganizerTrainings", fields: [organizerId], references: [id], onDelete: Cascade)
+  participations Participation[]
+  payments       Payment[]
+}
+
+model Participation {
+  id           String               @id @default(cuid())
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  trainingId   String
+  userId       String
+  status       ParticipationStatus  @default(PENDING_PAYMENT)
+  paymentId    String?              @unique
+  joinedAt     DateTime?
+  cancelledAt  DateTime?
+  cancelReason String?
+  source       ParticipationSource  @default(LINK)
+
+  training Training @relation(fields: [trainingId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payment  Payment? @relation(fields: [paymentId], references: [id])
+
+  @@unique([trainingId, userId])
+}
+
+model Payment {
+  id                String          @id @default(cuid())
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  trainingId        String
+  userId            String
+  amount            Decimal         @db.Decimal(10, 2)
+  currency          String          @default("RUB")
+  provider          PaymentProvider
+  providerPaymentId String?         @unique
+  status            PaymentStatus   @default(PENDING)
+  paidAt            DateTime?
+  metadata          Json?
+
+  training      Training       @relation(fields: [trainingId], references: [id], onDelete: Cascade)
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  participation Participation?
+
+  @@index([trainingId])
+  @@index([userId])
+}
+
+model OrganizerProfile {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  displayName   String
+  payoutMethod  String?
+  payoutDetails String?
+  isVerified    Boolean  @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  userId    String
+  type      String
+  title     String
+  body      String
+  channel   String
+  status    String
+  sentAt    DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  userId     String?
+  entityType String
+  entityId   String
+  action     String
+  payload    Json?
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
