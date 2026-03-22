@@ -68,6 +68,7 @@ model User {
   fullName     String
   phone        String?         @unique
   email        String?         @unique
+  passwordHash String?
   avatarUrl    String?
   role         UserRole        @default(PLAYER)
   isActive     Boolean         @default(true)

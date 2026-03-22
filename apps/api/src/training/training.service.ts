@@ -19,7 +19,7 @@ export class TrainingService {
     return Math.ceil(totalWithAcquiring / participantLimit);
   }
 
-  async create(createTrainingDto: CreateTrainingDto) {
+  async create(organizerId: string, createTrainingDto: CreateTrainingDto) {
     const calculatedPricePerParticipant = this.calculatePricePerParticipant(
       createTrainingDto.courtPriceTotal,
       createTrainingDto.participantLimit,
@@ -45,10 +45,7 @@ export class TrainingService {
         calculatedPricePerParticipant,
         joinToken: Math.random().toString(36).slice(2, 12),
         organizer: {
-          create: {
-            fullName: createTrainingDto.organizerName,
-            role: 'ORGANIZER',
-          },
+          connect: { id: organizerId },
         },
       },
     });

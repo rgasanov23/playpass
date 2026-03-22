@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
-import { TrainingService } from './training.service';
-import { TrainingController } from './training.controller';
+import { AuthModule } from '../auth/auth.module';
 import { PrismaModule } from '../prisma/prisma.module';
+import { TrainingController } from './training.controller';
+import { TrainingService } from './training.service';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, AuthModule],
   controllers: [TrainingController],
   providers: [TrainingService],
 })

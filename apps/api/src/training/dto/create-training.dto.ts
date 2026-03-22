@@ -60,8 +60,4 @@ export class CreateTrainingDto {
   @IsNumber()
   @Min(0)
   acquiringPercent: number;
-
-  @IsString()
-  @IsNotEmpty()
-  organizerName: string;
 }
