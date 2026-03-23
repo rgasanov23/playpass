@@ -1,6 +1,7 @@
 import {
   IsDateString,
   IsEnum,
+  IsIn,
   IsInt,
   IsNotEmpty,
   IsNumber,
@@ -32,6 +33,10 @@ export class CreateTrainingDto {
 
   @IsString()
   @IsNotEmpty()
+  city: string;
+
+  @IsString()
+  @IsNotEmpty()
   placeName: string;
 
   @IsOptional()
@@ -60,4 +65,8 @@ export class CreateTrainingDto {
   @IsNumber()
   @Min(0)
   acquiringPercent: number;
+
+  @IsOptional()
+  @IsIn(['PUBLIC', 'PRIVATE'])
+  visibility?: 'PUBLIC' | 'PRIVATE';
 }

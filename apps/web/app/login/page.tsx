@@ -1,0 +1,18 @@
+import { Suspense } from "react";
+import { LoginForm } from "./login-form";
+
+function LoginFallback() {
+  return (
+    <div className="mx-auto flex max-w-md flex-1 flex-col items-center justify-center px-4 py-16">
+      <div className="h-10 w-10 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
+    </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginFallback />}>
+      <LoginForm />
+    </Suspense>
+  );
+}

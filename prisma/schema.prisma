@@ -88,6 +88,7 @@ model Training {
   organizerId                   String
   title                         String
   description                   String?
+  city                          String              @default("")
   sportType                     SportType           @default(OTHER)
   placeName                     String
   address                       String?
